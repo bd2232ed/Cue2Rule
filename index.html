@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Cue2Rule: Agentic Decision-Rule Discovery for Open-Vocabulary Audio-Visual Event Localization (anonymous submission).">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cue2Rule: Agentic Decision-Rule Discovery for Open-Vocabulary AVE Localization</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Cue2Rule</h1>
+          <h2 class="subtitle is-4 publication-subtitle">
+            Agentic Decision-Rule Discovery for Open-Vocabulary
+            Audio-Visual Event Localization
+          </h2>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Anonymous Authors</span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Under double-blind review at NeurIPS</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Teaser / method overview figure -->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <img src="./static/images/method.png"
+           alt="Cue2Rule multi-agent loop: Plan, Design, Oracle, and Policy agents."/>
+
+      <p class="has-text-centered" style="margin-top: 1.5rem; margin-bottom: 1.25rem; max-width: 820px; margin-left: auto; margin-right: auto; color: #555;">
+        At each iteration, four agents take one turn each. New reports go
+        into memory and feed the next round of planning.
+      </p>
+
+      <div class="columns is-multiline is-variable is-3" style="max-width: 980px; margin-left: auto; margin-right: auto;">
+        <div class="column is-half">
+          <div style="border-left: 4px solid #ec5b8a; padding: 0.6rem 0.9rem; background: #fdf3f6; height: 100%;">
+            <p style="margin: 0;">
+              <strong style="color: #ec5b8a;">Plan</strong> &nbsp;reads the
+              accumulated reports and sets the next search direction.
+            </p>
+          </div>
+        </div>
+        <div class="column is-half">
+          <div style="border-left: 4px solid #d9b048; padding: 0.6rem 0.9rem; background: #fdf8e9; height: 100%;">
+            <p style="margin: 0;">
+              <strong style="color: #b88c1f;">Design</strong> &nbsp;writes a
+              candidate decision rule that passes a structural check.
+            </p>
+          </div>
+        </div>
+        <div class="column is-half">
+          <div style="border-left: 4px solid #7cbf6e; padding: 0.6rem 0.9rem; background: #f1f8ee; height: 100%;">
+            <p style="margin: 0;">
+              <strong style="color: #4f8a44;">Oracle</strong> &nbsp;measures how
+              expressive the rule could be under ideal per-video parameters.
+            </p>
+          </div>
+        </div>
+        <div class="column is-half">
+          <div style="border-left: 4px solid #6aaed6; padding: 0.6rem 0.9rem; background: #eef6fb; height: 100%;">
+            <p style="margin: 0;">
+              <strong style="color: #387ca8;">Policy</strong> &nbsp;trains a
+              small network to predict those parameters per video and reports
+              how it performs.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Abstract -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Open-vocabulary audio-visual event localization requires models to
+            temporally localize events and recognize categories that may be unseen
+            during training, exposing a tension between task-specific adaptation
+            and systematic generalization. We recast this problem as
+            <em>policy-aware formulation discovery</em>: instead of fine-tuning
+            pretrained encoders, we keep audio, visual, and text representations
+            frozen and compose them with an agent-discovered symbolic decision
+            formulation and a video-specific neural policy.
+          </p>
+          <p>
+            Our method, <strong>Cue2Rule</strong>, uses a multi-agent loop to
+            search over executable decision formulations, jointly guided by
+            oracle expressiveness and policy learnability. It then trains a
+            lightweight policy network to predict per-video parameters for the
+            selected formulation, replacing globally fixed thresholds with
+            adaptive parameterization. This decomposition separates reusable
+            decision structure from sample-specific adaptation.
+          </p>
+          <p>
+            On OV-AVEBench, Cue2Rule improves over the best fine-tuning
+            baseline, raising the total average score from
+            <strong>57.8 to 60.2</strong> and unseen-category performance from
+            <strong>55.8 to 59.9</strong>, while reducing the seen&ndash;unseen
+            gap from <strong>7.1 to 1.2</strong>. These results suggest that
+            agent-discovered symbolic structure with neural per-sample
+            instantiation provides a promising alternative to encoder
+            fine-tuning for open-vocabulary multimodal perception.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Motivation -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Motivation</h2>
+        <div class="content has-text-justified">
+          <p>
+            Open-vocabulary audio-visual event localization asks the model to
+            label each segment of a video only when an event is supported by
+            both what is heard and what is seen, including categories never
+            seen during training. The figure below sketches the design space
+            and where existing approaches sit:
+          </p>
+        </div>
+
+        <figure class="image" style="margin-top: 1rem; margin-bottom: 1rem;">
+          <img src="./static/images/motivation.png"
+               alt="The AVEL task and the OV-AVEL decision-layer landscape comparing training-free, fine-tuning, AV2A, and Cue2Rule."/>
+        </figure>
+
+        <div class="content has-text-justified">
+          <p><em>Top:</em> a segment is labeled with the event class only when
+            audio and visual evidence agree (here, <em>Playing Harp</em>);
+            otherwise it is background.</p>
+          <p><em>Bottom &mdash; four ways to build the decision layer:</em></p>
+          <ul>
+            <li>
+              <strong>(a) Training-free</strong> &mdash; freeze everything and
+              apply a simple agreement rule. Seen and unseen are balanced, but
+              the rule is too coarse, so overall performance stays low.
+            </li>
+            <li>
+              <strong>(b) Fine-tuning</strong> &mdash; train a temporal head
+              on seen classes. Seen accuracy goes up, but unseen accuracy
+              collapses, opening a large seen&ndash;unseen gap.
+            </li>
+            <li>
+              <strong>(c) AV<sup>2</sup>A</strong> &mdash; keep encoders
+              frozen and add a hand-designed dynamic-thresholding rule with
+              one set of globally tuned parameters shared across every video.
+              Better, but the rule is fixed by hand and the parameters are not
+              video-specific.
+            </li>
+            <li>
+              <strong>(d) Cue2Rule (ours)</strong> &mdash; let LLM agents
+              <em>discover</em> the decision rule under structural
+              constraints, and let a small policy network predict the rule's
+              parameters <em>per video</em>. Encoders stay frozen. We get high
+              overall performance and a small seen&ndash;unseen gap at the
+              same time.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Method -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Method</h2>
+        <div class="content has-text-justified">
+          <p>
+            Instead of fine-tuning the multimodal encoders, Cue2Rule keeps
+            audio, visual, and text features frozen and concentrates on the
+            decision layer that turns those features into per-segment event
+            predictions. We split that decision layer into two parts:
+          </p>
+          <ul>
+            <li>
+              A <strong>symbolic rule</strong> &mdash; an interpretable,
+              shared decision template that takes the frozen similarity cues
+              and produces dynamic, per-segment thresholds for the audio and
+              visual sides. The rule is the same for every video.
+            </li>
+            <li>
+              A small <strong>policy network</strong> &mdash; a lightweight
+              neural module that reads each video's audio and visual
+              embeddings and adjusts the rule's parameters specifically for
+              that video. The policy is the same for every video, but its
+              outputs are not.
+            </li>
+          </ul>
+          <p>
+            This split lets us ask two complementary questions independently:
+            <em>could</em> the rule express the right behavior under ideal
+            per-video parameters (its expressive ceiling), and <em>can</em> a
+            learned policy actually reach those parameters from frozen video
+            features (its learnability). Cue2Rule is judged good only when
+            both answers are yes.
+          </p>
+          <p>
+            We discover the rule and train its policy through an offline loop
+            of four cooperating LLM agents. The
+            <strong>Plan Agent</strong> looks at reports from previous rounds
+            and decides what to try next: revise the rule, retune ranges,
+            request a specific ablation, or ask for a focused diagnostic. The
+            <strong>Design Agent</strong> writes a candidate rule that
+            satisfies a small set of structural constraints (kept simple
+            enough to stay interpretable and stable to train) and a parameter
+            range for each knob. The <strong>Oracle Agent</strong> measures
+            how high the rule could score if every video were given its best
+            parameters, plus how much each parameter actually contributes.
+            The <strong>Policy Agent</strong> trains the policy network on
+            the new rule and reports how the learned, per-video parameters
+            behave in practice and where they fall short of the oracle.
+          </p>
+          <p>
+            All four agents write a short report into a shared memory at the
+            end of each iteration, and the Plan Agent uses that memory to
+            steer the next round. Importantly, the agents are only used
+            during this offline search. At test time there are no LLM calls
+            at all: a video goes through the frozen encoders, the policy
+            network produces parameters for that video, and the rule turns
+            similarity cues into predictions.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Results -->
+<section class="section">
+  <div class="container is-max-widescreen">
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Results</h2>
+        <div class="content has-text-justified">
+          <p>
+            <strong>Performance comparison on OV-AVEBench.</strong>
+            Baseline scores follow the OV-AVEL benchmark; AV<sup>2</sup>A is
+            adapted from its official implementation to ImageBind features and
+            tuned on the OV-AVEBench validation set. Cue2Rule attains the best
+            unseen-category and total averages, while shrinking the
+            seen&ndash;unseen gap from <strong>7.1</strong> (best fine-tuning
+            baseline) to <strong>1.2</strong>.
+          </p>
+        </div>
+
+        <div class="table-container">
+          <table class="table is-bordered is-hoverable is-fullwidth has-text-centered" style="font-size: 0.9rem;">
+            <thead>
+              <tr>
+                <th rowspan="2" class="has-text-left">Method</th>
+                <th colspan="4">Seen</th>
+                <th colspan="4">Unseen</th>
+                <th colspan="4">Total</th>
+              </tr>
+              <tr>
+                <th>Acc.</th><th>Seg.</th><th>Eve.</th><th>Avg.</th>
+                <th>Acc.</th><th>Seg.</th><th>Eve.</th><th>Avg.</th>
+                <th>Acc.</th><th>Seg.</th><th>Eve.</th><th>Avg.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="13" class="has-text-left has-background-light"><em>Training-free</em></td>
+              </tr>
+              <tr>
+                <td class="has-text-left">&nbsp;&nbsp;Video-LLaMA2</td>
+                <td>50.1</td><td>40.6</td><td>32.0</td><td>40.9</td>
+                <td>48.5</td><td>38.5</td><td>29.0</td><td>38.6</td>
+                <td>48.9</td><td>39.1</td><td>29.8</td><td>39.3</td>
+              </tr>
+              <tr>
+                <td class="has-text-left">&nbsp;&nbsp;CLIP &amp; CLAP</td>
+                <td>51.4</td><td>41.4</td><td>31.9</td><td>41.6</td>
+                <td>51.6</td><td>42.2</td><td>31.6</td><td>41.8</td>
+                <td>51.5</td><td>41.9</td><td>31.7</td><td>41.7</td>
+              </tr>
+              <tr>
+                <td class="has-text-left">&nbsp;&nbsp;ImageBind-TF</td>
+                <td>57.5</td><td>45.0</td><td>34.0</td><td>45.5</td>
+                <td>59.8</td><td>47.3</td><td>34.0</td><td>47.0</td>
+                <td>59.2</td><td>46.7</td><td>34.0</td><td>46.6</td>
+              </tr>
+
+              <tr>
+                <td colspan="13" class="has-text-left has-background-light"><em>Fine-tuning</em></td>
+              </tr>
+              <tr>
+                <td class="has-text-left">&nbsp;&nbsp;CMRA</td>
+                <td>65.2</td><td>58.8</td><td>54.3</td><td>59.4</td>
+                <td>36.0</td><td>31.0</td><td>26.3</td><td>31.1</td>
+                <td>44.3</td><td>38.9</td><td>34.3</td><td>39.2</td>
+              </tr>
+              <tr>
+                <td class="has-text-left">&nbsp;&nbsp;AVE</td>
+                <td><strong>76.6</strong></td><td>63.6</td><td>56.0</td><td>65.4</td>
+                <td>44.6</td><td>33.2</td><td>24.0</td><td>34.0</td>
+                <td>53.8</td><td>41.9</td><td>33.2</td><td>42.9</td>
+              </tr>
+              <tr>
+                <td class="has-text-left">&nbsp;&nbsp;PSP</td>
+                <td>75.4</td><td>66.8</td><td>61.0</td><td>67.7</td>
+                <td>33.7</td><td>28.2</td><td>24.2</td><td>28.7</td>
+                <td>45.6</td><td>39.3</td><td>34.7</td><td>39.9</td>
+              </tr>
+              <tr>
+                <td class="has-text-left">&nbsp;&nbsp;MM-Pyramid</td>
+                <td>76.5</td><td><strong>66.9</strong></td><td><strong>62.3</strong></td><td>68.6</td>
+                <td>36.8</td><td>29.0</td><td>23.8</td><td>29.9</td>
+                <td>48.4</td><td>40.2</td><td>35.2</td><td>41.2</td>
+              </tr>
+              <tr>
+                <td class="has-text-left">&nbsp;&nbsp;ImageBind-FT</td>
+                <td>72.5</td><td>61.8</td><td>54.5</td><td><strong>62.9</strong></td>
+                <td>64.9</td><td>55.0</td><td>47.5</td><td>55.8</td>
+                <td>67.1</td><td>56.9</td><td>49.5</td><td>57.8</td>
+              </tr>
+
+              <tr>
+                <td colspan="13" class="has-text-left has-background-light"><em>Dynamic Thresholding</em></td>
+              </tr>
+              <tr>
+                <td class="has-text-left">&nbsp;&nbsp;AV<sup>2</sup>A-Manual</td>
+                <td>53.0</td><td>46.1</td><td>42.7</td><td>47.3</td>
+                <td>59.5</td><td>51.1</td><td>46.4</td><td>52.3</td>
+                <td>57.6</td><td>49.7</td><td>45.4</td><td>50.9</td>
+              </tr>
+              <tr>
+                <td class="has-text-left">&nbsp;&nbsp;AV<sup>2</sup>A-Grid</td>
+                <td>59.9</td><td>53.1</td><td>49.1</td><td>54.1</td>
+                <td>63.4</td><td>55.6</td><td>50.9</td><td>56.6</td>
+                <td>62.4</td><td>54.9</td><td>50.4</td><td>55.9</td>
+              </tr>
+              <tr style="background-color: #fffbe6;">
+                <td class="has-text-left">&nbsp;&nbsp;<strong>Cue2Rule (ours)</strong></td>
+                <td>68.6</td><td>60.1</td><td>54.6</td><td>61.1</td>
+                <td><strong>68.5</strong></td><td><strong>59.1</strong></td><td><strong>52.0</strong></td><td><strong>59.9</strong></td>
+                <td><strong>68.6</strong></td><td><strong>59.4</strong></td><td><strong>52.7</strong></td><td><strong>60.2</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BibTeX -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@inproceedings{anonymous2026cue2rule,
+  title     = {Cue2Rule: Agentic Decision-Rule Discovery for
+               Open-Vocabulary Audio-Visual Event Localization},
+  author    = {Anonymous},
+  booktitle = {Submitted to NeurIPS},
+  year      = {2026},
+  note      = {Under double-blind review}
+}</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered">
+          <p>
+            Page template adapted from the
+            <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> project page.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
